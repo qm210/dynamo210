@@ -17,3 +17,6 @@ def type_adjusted_value(value):
     except ValueError:
         pass
     return value
+
+def this_and_next_element(list):
+    return zip(list, list[1:])
