@@ -66,7 +66,7 @@ class Dynamo:
             else:
                 block['content'].append(parsed_line)
 
-            self.close_block(block)
+        self.close_block(block)
 
 
     def close_block(self, block):
@@ -85,9 +85,9 @@ class Dynamo:
         self.bpm_block.setdefault('beats', 4)
 
         parse_bpm_content = lambda c: {
-                'beat': float(c[0]) * self.bpm_block['beats'],
-                'bpm': float(c[1])
-            }
+            'beat': float(c[0]) * self.bpm_block['beats'],
+            'bpm': float(c[1])
+        }
 
         self.bpm_block['content'] = list(map(parse_bpm_content, self.bpm_block['content']))
 
@@ -155,8 +155,10 @@ class Dynamo:
         return "\n".join([array_t, array_b, array_fac, array_slope, function])
 
     def parse_defs_to_curves(self):
-        for block in self.def_blocks:
-            print(block)
+        print()
+        print(self.def_blocks)
+        # for block in self.def_blocks:
+            # print(block)
 
     def write_to_glsl(self, bpm_code, def_code):
         with open(f"dynamo/{self.args.config}.glsl", 'w') as file:
