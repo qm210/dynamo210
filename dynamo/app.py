@@ -145,20 +145,12 @@ class Dynamo:
         array_fac = get_floatarray('_fac_', lambda step: to_glsl(step['factor']/60.))
         array_slope = get_floatarray('_slope_', lambda step: to_glsl(step['slope']))
 
-        print()
-        print(array_t)
-        print(array_b)
-        print(array_fac)
-        print(array_slope)
-
         # function_body = function_body + f"if (t < {}) b += log({slope} * min(b, {b_end}) + {offset})" + LF4
-        function = 'float _beat(in float t){float b=0.; int _it;' + LF4
-        function += f"for(_it = 0; _it < {N - 2} && _t_[_it + 1] < t; _it++);" + LF4
-        function += "if (_slope_[_it] == 0.) return _b_[_it] + (t - _t_[_it]) * _fac_[_it];" + LF4
-        function += "return _b_[_it] + _fac_[_it] * (exp(_slope_[_it]*(t - _t_[_it])) - 1.);"
+        function = 'float _beat(float t)\n{' + LF4
+        function += f"int it; for(it = 0; it < {N - 2} && _t_[it + 1] < t; it++);" + LF4
+        function += "if (_slope_[it] == 0.) return _b_[it] + (t - _t_[it]) * _fac_[it];" + LF4
+        function += "return _b_[it] + _fac_[it] * (exp(_slope_[it]*(t - _t_[it])) - 1.);"
         function += "\n}\n"
-
-        print(function)
 
         return "\n".join([array_t, array_b, array_fac, array_slope, function])
 
