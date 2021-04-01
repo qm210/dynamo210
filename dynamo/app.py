@@ -13,8 +13,9 @@ def to_glsl(value):
         result = f"{value:.{FLOAT_PREC}f}"
         if result.count('.') == 0:
             return result + '.'
-        if result[-FLOAT_PREC-1:] == '.' + FLOAT_PREC * '0':
-            return result[:-FLOAT_PREC]
+        result = result.strip('0')
+        if result == '.':
+            return '0.'
     return result
 
 helper_code = """
@@ -114,10 +115,9 @@ class Dynamo:
 
         def parse_bpm_line(line):
             args = type_adjusted_args(line[2:], dtype=float)
-            beat = (float(line[0]) - self.bpm_block['first']) * self.bpm_block['beats']
             return {
-                'beat': max(0, beat),
-                'bpm': float(line[1]),
+                'beat': max(0, float(line[0]) - self.bpm_block['first']),
+                'bpm': float(line[1]) / self.bpm_block['beats'],
                 **args
             }
 
@@ -166,7 +166,6 @@ class Dynamo:
         array_t = get_floatarray('_t_', lambda step: to_glsl(60 * step['time']))
         array_b = get_floatarray('_b_', lambda step: to_glsl(step['beat']))
         array_fac = get_floatarray('_fac_', lambda step: to_glsl(step['factor']))
-        array_fac += ' // fac is bps for flat segments, else... something else.'
         array_slope = get_floatarray('_slope_', lambda step: to_glsl(step['slope']))
 
         function = 'float _beat(float t)\n{' + LF4
