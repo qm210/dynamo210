@@ -1,0 +1,6 @@
+bpm beats=4
+0   111.1
+8   133.7
+
+def FOUR_ON_FLOOR shape=expeak
+0   level=1     attack=.001 decay=0.8

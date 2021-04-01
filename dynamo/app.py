@@ -33,6 +33,7 @@ class Dynamo:
 
     def __init__(self, parser):
         parser.add_argument("config")
+        parser.add_argument("--print", action="store_true")
         self.args = parser.parse_args()
 
         config_file = f"dynamo/config/{self.args.config}.dnm"
@@ -105,12 +106,17 @@ class Dynamo:
 
         self.bpm_block.setdefault('beats', 4)
 
-        parse_bpm_content = lambda c: {
-            'beat': float(c[0]) * self.bpm_block['beats'],
-            'bpm': float(c[1])
-        }
+        def parse_bpm_line(line):
+            args = type_adjusted_args(line[2:], dtype=float)
+            return {
+                'beat': float(line[0]) * self.bpm_block['beats'],
+                'bpm': float(line[1]),
+                **args
+            }
 
-        self.bpm_block['content'] = list(map(parse_bpm_content, self.bpm_block['content']))
+        self.bpm_block['content'] = list(map(parse_bpm_line, self.bpm_block['content']))
+
+        print(self.bpm_block)
 
         # we have a problem if the bpm list doesnt start with 0. just make it start with 0.
         current_minute = 0.
@@ -119,7 +125,10 @@ class Dynamo:
         for start, end in this_and_next_element(self.bpm_block['content']):
             b_start = start['beat']
             b_end = end['beat']
-            slope = (end['bpm'] - start['bpm']) / (b_end - b_start)
+            if 'slope' in start:
+                slope = start['slope']
+            else:
+                slope = (end['bpm'] - start['bpm']) / (b_end - b_start)
             offset = start['bpm'] - slope * b_start
             flat_time = (b_end - b_start) / start['bpm']
 
@@ -245,12 +254,18 @@ class Dynamo:
         return '\n'.join([*def_codes, *copy_codes])
 
     def write_to_glsl(self, bpm_code, def_code):
-        with open(f"dynamo/{self.args.config}.glsl", 'w') as file:
+        out_file = f"dynamo/{self.args.config}.glsl"
+        with open(out_file, 'w') as file:
             file.write(helper_code)
             file.write(bpm_code)
             if def_code is not None:
-                print(def_code)
                 file.write(def_code)
+        print("Written:", out_file)
+
+        if self.args.print:
+            print("=== Content:")
+            with open(out_file, 'r') as file:
+                print(file.read())
 
 if __name__ == '__main__':
     Dynamo.main()
