@@ -109,6 +109,22 @@ class Dynamo:
             self.def_blocks.append(block)
 
 
+    @staticmethod
+    def calc(term):
+        result = 0
+        for summand in term.split('+'):
+            first_factor = True
+            for factor in summand.split('*'):
+                try:
+                    num, den = factor.split('/')
+                    part = float(num)/float(den)
+                except ValueError:
+                    part = float(factor)
+                product = part if first_factor else part * product
+                first_factor = False
+            result += product
+        return result
+
     def parse_bpm_to_glsl(self):
         if self.bpm_block is None:
             quit("No BPM block defined. Can't work with shit.")
@@ -118,8 +134,10 @@ class Dynamo:
 
         def parse_bpm_line(line):
             args = type_adjusted_args(line[2:], dtype=float)
+            beat = Dynamo.calc(line[0])
+
             return {
-                'beat': max(0, float(line[0]) - self.bpm_block['first']),
+                'beat': max(0, beat - self.bpm_block['first']),
                 'bpm': float(line[1]) / self.bpm_block['beats'],
                 **args
             }
@@ -182,13 +200,13 @@ class Dynamo:
     @staticmethod
     def def_content(line):
         args = type_adjusted_args(line[1:], dtype=float)
-        return {'beat': float(line[0]), **args}
+        return {'beat': Dynamo.calc(line[0]), **args}
 
     @staticmethod
     def def_term(line, block, var='b'):
         shape = line.get('shape', block['shape'])
-        line.setdefault('attack', 0.01)
-        line.setdefault('decay', 0.25)
+        line.setdefault('attack', block.get('attack', 0.01))
+        line.setdefault('decay', block.get('decay', 0.25))
         line.setdefault('repeat', 0.)
 
         if line['beat'] != 0:

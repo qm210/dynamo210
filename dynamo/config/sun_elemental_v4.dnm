@@ -27,13 +27,13 @@ bpm beats=4 first=1
 def ONCE_A_BEAT shape=expeak
 0   level=1   attack=0.01     decay=0.2    repeat=1.
 
-def anfangsplingpling start=4 shape=expeak
-0
-.25
-.5
-.75
+def anfangsplingpling start=5 shape=step
+0   level=.25
+.25 level=.25
+.5  level=.25
+.75 level=.25
 
-def basiclead shape=expeak start=5 repeat=2
+def basiclead shape=peak start=6 repeat=2
 0
 .125
 .25
@@ -44,12 +44,22 @@ def basiclead shape=expeak start=5 repeat=2
 1.25
 1.5
 
+def basic_kick_10_to_26 shape=peak start=10 end=26 repeat=4
+0
+3/8
+5/8
+3/4
+1
+1+3/8
+
+def basic_clap_10_to_26 shape=peak start=10 end=26 repeat=4
+
+
 # can have ONE BPM, beats=4 for 4 beats per bar, e.g. 4/4 (because the units are bars, not beats)
 # <onset beat> <bpm> <points for linear interpolation>
 #
 # def NAME type=none/step/peak/expeak default=0 level=1 start=0 end=0  # end=0 (or not given) is
 # <beat> attack=? decay=? repeat=0 level=1
-
 
 # gitter vibriert
 # fog stärke

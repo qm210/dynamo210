@@ -20,7 +20,6 @@ float _beat(float t)
 float ONCE_A_BEAT(float b)
 {
     if (b<0.) return 0.;
-    if (b>1.) return 0.;
     float r = 0.;
     r += .8234 * pow(mod(b, 1.0), .0347) * exp(-3.4657*mod(b, 1.0));
     return r * theta(b);
@@ -30,10 +29,10 @@ float anfangsplingpling(float b)
     b -= 4.;
     if (b<0.) return 0.;
     float r = 0.;
-    r += .8561 * pow(b, .0277) * exp(-2.7726*b);
-    r += .8561 * pow((b-.25), .0277) * exp(-2.7726*(b-.25));
-    r += .8561 * pow((b-.5), .0277) * exp(-2.7726*(b-.5));
-    r += .8561 * pow((b-.75), .0277) * exp(-2.7726*(b-.75));
+    r += .25*smstep(0., .01, b);
+    r += .25*smstep(0., .01, (b-.25));
+    r += .25*smstep(0., .01, (b-.5));
+    r += .25*smstep(0., .01, (b-.75));
     return r * theta(b);
 }
 float basiclead(float b)
@@ -42,14 +41,38 @@ float basiclead(float b)
     if (b<0.) return 0.;
     b = mod(b, 2.);
     float r = 0.;
-    r += .8561 * pow(b, .0277) * exp(-2.7726*b);
-    r += .8561 * pow((b-.125), .0277) * exp(-2.7726*(b-.125));
-    r += .8561 * pow((b-.25), .0277) * exp(-2.7726*(b-.25));
-    r += .8561 * pow((b-.5), .0277) * exp(-2.7726*(b-.5));
-    r += .8561 * pow((b-.75), .0277) * exp(-2.7726*(b-.75));
-    r += .8561 * pow((b-1.), .0277) * exp(-2.7726*(b-1.));
-    r += .8561 * pow((b-1.125), .0277) * exp(-2.7726*(b-1.125));
-    r += .8561 * pow((b-1.25), .0277) * exp(-2.7726*(b-1.25));
-    r += .8561 * pow((b-1.5), .0277) * exp(-2.7726*(b-1.5));
+    r += theta(b) * (2.*smstep(-.01, .01, b)-1.)*(1.-smstep(0., .25, b-.01));
+    r += theta((b-.125)) * (2.*smstep(-.01, .01, (b-.125))-1.)*(1.-smstep(0., .25, (b-.125)-.01));
+    r += theta((b-.25)) * (2.*smstep(-.01, .01, (b-.25))-1.)*(1.-smstep(0., .25, (b-.25)-.01));
+    r += theta((b-.5)) * (2.*smstep(-.01, .01, (b-.5))-1.)*(1.-smstep(0., .25, (b-.5)-.01));
+    r += theta((b-.75)) * (2.*smstep(-.01, .01, (b-.75))-1.)*(1.-smstep(0., .25, (b-.75)-.01));
+    r += theta((b-1.)) * (2.*smstep(-.01, .01, (b-1.))-1.)*(1.-smstep(0., .25, (b-1.)-.01));
+    r += theta((b-1.125)) * (2.*smstep(-.01, .01, (b-1.125))-1.)*(1.-smstep(0., .25, (b-1.125)-.01));
+    r += theta((b-1.25)) * (2.*smstep(-.01, .01, (b-1.25))-1.)*(1.-smstep(0., .25, (b-1.25)-.01));
+    r += theta((b-1.5)) * (2.*smstep(-.01, .01, (b-1.5))-1.)*(1.-smstep(0., .25, (b-1.5)-.01));
+    return r * theta(b);
+}
+float basic_kick_10_to_26(float b)
+{
+    b -= 9.;
+    if (b<0.) return 0.;
+    if (b>16.) return 0.;
+    b = mod(b, 4.);
+    float r = 0.;
+    r += theta(b) * (2.*smstep(-.01, .01, b)-1.)*(1.-smstep(0., .25, b-.01));
+    r += theta((b-.375)) * (2.*smstep(-.01, .01, (b-.375))-1.)*(1.-smstep(0., .25, (b-.375)-.01));
+    r += theta((b-.625)) * (2.*smstep(-.01, .01, (b-.625))-1.)*(1.-smstep(0., .25, (b-.625)-.01));
+    r += theta((b-.75)) * (2.*smstep(-.01, .01, (b-.75))-1.)*(1.-smstep(0., .25, (b-.75)-.01));
+    r += theta((b-1.)) * (2.*smstep(-.01, .01, (b-1.))-1.)*(1.-smstep(0., .25, (b-1.)-.01));
+    r += theta((b-1.375)) * (2.*smstep(-.01, .01, (b-1.375))-1.)*(1.-smstep(0., .25, (b-1.375)-.01));
+    return r * theta(b);
+}
+float basic_clap_10_to_26(float b)
+{
+    b -= 9.;
+    if (b<0.) return 0.;
+    if (b>16.) return 0.;
+    b = mod(b, 4.);
+    float r = 0.;
     return r * theta(b);
 }
