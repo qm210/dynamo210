@@ -161,8 +161,11 @@ class Dynamo:
 
         def def_term(line, block, var='b'):
             shape = line.get('shape', block['shape'])
-            line.setdefault('attack', '0.01')
-            line.setdefault('decay', '0.25')
+            line.setdefault('attack', 0.01)
+            line.setdefault('decay', 0.25)
+
+            if line['beat'] != 0:
+                var = f"({var}-{to_glsl(line['beat'])})"
 
             if shape == 'peak':
                 return '0.'

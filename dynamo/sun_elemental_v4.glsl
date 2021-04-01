@@ -15,5 +15,6 @@ float ONCE_PER_BEAT(float b)
 {
     float r = 0.;
     r += 0.909 * pow(b, 0.029) * exp(-0.289*b);
+    r += 0.980 * pow((b-0.200), 0.004) * exp(-0.361*(b-0.200));
     return r * theta(b-4.);
 }
