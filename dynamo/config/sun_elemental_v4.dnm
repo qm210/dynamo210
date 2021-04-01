@@ -1,17 +1,31 @@
-bpm beats=4
-0   72.632
-9   95.535
-13  110.505
-17  129.6
-89  129.6
-89.5 108.721
-90  96.706
-90.5 89.792
-91  85.814
-96  85.814
+bpm beats=4 first=1
+1   72.632
+2   74.602
+3   76.696
+4   78.922
+5   81.287
+6   83.801
+7   86.472
+8   89.312
+9   92.329
+10  95.535
+11  98.943
+12  102.565
+13  106.414
+14  110.505
+15  114.852
+16  119.472
+17  124.382
+18  129.6
+90  129.6
+90.5 108.721
+91  96.706
+91.5 89.792
+92  85.814
+97  85.814
 
 def FOUR_ON_FLOOR shape=expeak
-0   level=1   attack=0.01     decay=0.1    repeat=1.
+0   level=1   attack=0.01     decay=0.2    repeat=1.
 
 # can have ONE BPM, beats=4 for 4 beats per bar, e.g. 4/4 (because the units are bars, not beats)
 # <onset beat> <bpm> <points for linear interpolation>

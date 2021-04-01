@@ -4,14 +4,16 @@ from .utils import type_adjusted_args, this_and_next_element
 
 LF4 = '\n' + 4 * ' '
 
+FLOAT_PREC = 4
+
 def to_glsl(value):
     result = str(value)
     if type(value) == float:
-        result = f"{value:.4f}"
+        result = f"{value:.{FLOAT_PREC}f}"
         if result.count('.') == 0:
             return result + '.'
-        if result[-4:] == '.0000':
-            return result[:-3]
+        if result[-FLOAT_PREC-1:] == '.' + FLOAT_PREC * '0':
+            return result[:-FLOAT_PREC]
     return result
 
 helper_code = """
@@ -106,20 +108,22 @@ class Dynamo:
             quit("No BPM block defined. Can't work with shit.")
 
         self.bpm_block.setdefault('beats', 4)
+        self.bpm_block.setdefault('first', 0.)
 
         def parse_bpm_line(line):
             args = type_adjusted_args(line[2:], dtype=float)
+            beat = (float(line[0]) - self.bpm_block['first']) * self.bpm_block['beats']
             return {
-                'beat': float(line[0]) * self.bpm_block['beats'],
+                'beat': max(0, beat),
                 'bpm': float(line[1]),
                 **args
             }
 
         self.bpm_block['content'] = list(map(parse_bpm_line, self.bpm_block['content']))
 
-        print(self.bpm_block)
+        print("BPM", self.bpm_block)
 
-        # we have a problem if the bpm list doesnt start with 0. just make it start with 0.
+        # we have a problem if the bpm list doesnt start with 0 / the "first" value. just make it start with 0.
         current_minute = 0.
         beat_table = [{'time': current_minute, 'beat': 0.}]
 
@@ -202,7 +206,6 @@ class Dynamo:
             beta = line['decay']
             alpha = line['attack'] * beta
             norm = math.pow(alpha/(beta*math.e), alpha)
-            print(line, alpha, beta, norm)
             return f"{to_glsl(norm)} * pow({var}, {to_glsl(alpha)}) * exp(-{to_glsl(beta)}*{var})"
 
         return None
