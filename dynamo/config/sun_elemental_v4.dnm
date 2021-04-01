@@ -27,6 +27,23 @@ bpm beats=4 first=1
 def FOUR_ON_FLOOR shape=expeak
 0   level=1   attack=0.01     decay=0.2    repeat=1.
 
+def anfangsplingpling shape=expeak
+0
+.25
+.5
+.75
+
+def basiclead shape=expeak repeat=2
+0
+.125
+.25
+.5
+.75
+1
+1.125
+1.25
+1.5
+
 # can have ONE BPM, beats=4 for 4 beats per bar, e.g. 4/4 (because the units are bars, not beats)
 # <onset beat> <bpm> <points for linear interpolation>
 #

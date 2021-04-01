@@ -215,6 +215,7 @@ class Dynamo:
         block.setdefault('shape', 'peaks')
         block.setdefault('start', 0.)
         block.setdefault('end', 0.)
+        block.setdefault('repeat', 0.)
         block.setdefault('default', 0.)
         table = list(map(Dynamo.def_content, block['content']))
 
@@ -225,7 +226,15 @@ class Dynamo:
         function = f"float {block['name']}(float b)\n{{" + LF4
 
         if block_start > 0:
-            function += f"b -= {to_glsl(float(block['start']))}; if (b<0.) return 0.;" + LF4
+            function += f"b -= {to_glsl(float(block['start']))};" + LF4
+
+        function += "if (b<0.) return 0.;" + LF4
+
+        if block_end > 0:
+            function += f"if (b>{to_glsl(block_end)}) return 0.;" + LF4
+
+        if block['repeat'] > 0:
+            function += f"b = mod(b, {to_glsl(float(block['repeat']))});" + LF4
 
         function += f"float r = {to_glsl(float(block['default']))};" + LF4
 
@@ -238,7 +247,7 @@ class Dynamo:
                 term = to_glsl(level) + '*' + term
             function += 'r += ' + term + ';' + LF4
 
-        function += f"return r * theta(b){end_factor};\n}}"
+        function += f"return r * theta(b);\n}}"
 
         return function
 
