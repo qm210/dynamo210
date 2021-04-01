@@ -2,8 +2,10 @@ def type_adjusted_args(list, dtype=None):
     result = {}
     for elem in list:
         key, value = elem.split('=')
-        if dtype is not None:
+        try:
             value = dtype(value)
+        except (TypeError, ValueError):
+            pass
         result[key] = type_adjusted_value(value)
     return result
 

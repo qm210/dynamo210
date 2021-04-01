@@ -1,4 +1,8 @@
 
+// dynamo210 beat/light sync GLSL function generator by QM (April 2021, corona fuck yeah)
+// usage:
+// get current beat by B =_beat(iTime), then call your curve functions with argument B
+
 float smstep(float a, float b, float x) {return smoothstep(a, b, clamp(x, a, b));}'
 float theta(float x) { return smstep(0.,1e-3,x); }
 float _t_[8] = float[8](0.,43.910,177.244,178.253,179.423,180.710,182.077,196.061);
@@ -13,8 +17,11 @@ float _beat(float t)
 }
 float ONCE_PER_BEAT(float b)
 {
+    b -= 4.; if (b<0.) return 0.;
     float r = 0.;
-    r += 0.909 * pow(b, 0.029) * exp(-0.289*b);
-    r += 0.980 * pow((b-0.200), 0.004) * exp(-0.361*(b-0.200));
-    return r * theta(b-4.);
+    r += 0.909 * pow(mod(b, 1.0), 0.029) * exp(-0.289*mod(b, 1.0));
+    r += smstep(0., 0.010, (b-0.500));
+    return r * theta(b);
 }
+
+float LATER_ALLIGATOR(float b){return ONCE_PER_BEAT(b-6.);}

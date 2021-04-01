@@ -10,7 +10,9 @@ bpm beats=4
 
 def ONCE_PER_BEAT shape=expeak start=4
 0   level=1   attack=0.1     decay=0.2    repeat=1
-.2
+.5  shape=step
+
+copy ONCE_PER_BEAT LATER_ALLIGATOR start=10
 
 
 # can have ONE BPM, beats=4 for 4 beats per bar, e.g. 4/4 (because the units are bars, not beats)
