@@ -4,6 +4,21 @@ from .utils import type_adjusted_args, this_and_next_element
 
 LF4 = '\n' + 4 * ' '
 
+def to_glsl(value):
+    result = str(value)
+    if type(value) == float:
+        result = f"{value:.3f}"
+        if result.count('.') == 0:
+            return result + '.'
+        if result[-4:] == '.000':
+            return result[:-3]
+    return result
+
+helper_code = """
+float smstep(float a, float b, float x) {return smoothstep(a, b, clamp(x, a, b));}'
+float theta(float x) { return smstep(0.,1e-3,x); }
+"""
+
 class Dynamo:
 
     @staticmethod
@@ -29,14 +44,12 @@ class Dynamo:
         self.bpm_curve = None
         self.def_curves = []
 
-
     def run(self):
         self.parse_lines_to_blocks()
         bpm_code = self.parse_bpm_to_glsl()
         def_code = self.parse_defs_to_curves()
 
         self.write_to_glsl(bpm_code, def_code)
-
 
     @staticmethod
     def new_block(cmd, parsed_line = []):
@@ -91,18 +104,6 @@ class Dynamo:
 
         self.bpm_block['content'] = list(map(parse_bpm_content, self.bpm_block['content']))
 
-        def to_glsl(value):
-            result = str(value)
-            if type(value) == float:
-                result = f"{value:.3f}"
-                if result.count('.') == 0:
-                    return result + '.'
-                if result[-4:] == '.000':
-                    return result[:-3]
-            return result
-
-        print('BPM block', self.bpm_block)
-
         # we have a problem if the bpm list doesnt start with 0. just make it start with 0.
         current_minute = 0.
         beat_table = [{'time': current_minute, 'beat': 0.}]
@@ -145,7 +146,6 @@ class Dynamo:
         array_fac = get_floatarray('_fac_', lambda step: to_glsl(step['factor']/60.))
         array_slope = get_floatarray('_slope_', lambda step: to_glsl(step['slope']))
 
-        # function_body = function_body + f"if (t < {}) b += log({slope} * min(b, {b_end}) + {offset})" + LF4
         function = 'float _beat(float t)\n{' + LF4
         function += f"int it; for(it = 0; it < {N - 2} && _t_[it + 1] < t; it++);" + LF4
         function += "if (_slope_[it] == 0.) return _b_[it] + (t - _t_[it]) * _fac_[it];" + LF4
@@ -155,15 +155,67 @@ class Dynamo:
         return "\n".join([array_t, array_b, array_fac, array_slope, function])
 
     def parse_defs_to_curves(self):
-        print()
-        print(self.def_blocks)
-        # for block in self.def_blocks:
-            # print(block)
+        def def_content(line):
+            args = type_adjusted_args(line[1:], dtype=float)
+            return {'beat': float(line[0]), **args}
+
+        def def_term(line, block, var='b'):
+            shape = line.get('shape', block['shape'])
+            line.setdefault('attack', '0.01')
+            line.setdefault('decay', '0.25')
+
+            if shape == 'peak':
+                return '0.'
+
+            elif shape == 'step':
+                return '0.'
+
+            elif shape == 'expeak':
+                beta = line['decay'] / math.log(2) # / math.log(2) ?
+                alpha = line['attack'] * beta
+                norm = math.pow(alpha/(beta*math.e), alpha)
+                return f"{to_glsl(norm)} * pow({var}, {to_glsl(alpha)}) * exp(-{to_glsl(beta)}*{var})"
+
+            return None
+
+        def parse_def_to_curve(block):
+            block.setdefault('shape', 'peaks')
+            block.setdefault('start', 0.)
+            block.setdefault('end', 0.)
+            block.setdefault('default', 0.)
+            table = list(map(def_content, block['content']))
+
+            block_start = float(block['start'])
+            block_end = float(block['end'])
+
+            start_factor = f" * theta(b-{to_glsl(block_start)})" if block_start > 0 else ""
+            end_factor = f" * theta({to_glsl(block_end)}-b)" if block_end > 0 else ""
+
+            function = f"float {block['name']}(float b)\n{{" + LF4
+            function += f"float r = {to_glsl(float(block['default']))};" + LF4
+
+            for line in table:
+                level = line.get('level', 1.)
+                term = def_term(line, block)
+                if term is None:
+                    term = to_glsl(level)
+                elif level != 1.:
+                    term = to_glsl(level) + '*' + term
+                function += 'r += ' + term + ';' + LF4
+
+            function += f"return r{start_factor}{end_factor};\n}}\n"
+
+            return function
+
+        def_codes = [parse_def_to_curve(block) for block in self.def_blocks]
+        return '\n'.join(def_codes)
 
     def write_to_glsl(self, bpm_code, def_code):
         with open(f"dynamo/{self.args.config}.glsl", 'w') as file:
+            file.write(helper_code)
             file.write(bpm_code)
             if def_code is not None:
+                print(def_code)
                 file.write(def_code)
 
 if __name__ == '__main__':

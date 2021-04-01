@@ -1,7 +1,9 @@
-def type_adjusted_args(list):
+def type_adjusted_args(list, dtype=None):
     result = {}
     for elem in list:
         key, value = elem.split('=')
+        if dtype is not None:
+            value = dtype(value)
         result[key] = type_adjusted_value(value)
     return result
 
