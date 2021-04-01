@@ -17,15 +17,17 @@ float _beat(float t)
     if (_slope_[it] == 0.) return _b_[it] + (t - _t_[it]) * _fac_[it];
     return _b_[it] + _fac_[it] * (exp(_slope_[it]*(t - _t_[it])) - 1.);
 }
-float FOUR_ON_FLOOR(float b)
+float ONCE_A_BEAT(float b)
 {
     if (b<0.) return 0.;
+    if (b>1.) return 0.;
     float r = 0.;
     r += .8234 * pow(mod(b, 1.0), .0347) * exp(-3.4657*mod(b, 1.0));
     return r * theta(b);
 }
 float anfangsplingpling(float b)
 {
+    b -= 4.;
     if (b<0.) return 0.;
     float r = 0.;
     r += .8561 * pow(b, .0277) * exp(-2.7726*b);

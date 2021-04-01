@@ -21,6 +21,6 @@ float FOUR_ON_FLOOR(float b)
 {
     if (b<0.) return 0.;
     float r = 0.;
-    r += .973 * pow(mod(b, 1.0), .0035) * exp(-3.4657*mod(b, 1.0));
+    r += .973 * pow(mod(b, 0.25), .0035) * exp(-3.4657*mod(b, 0.25));
     return r * theta(b);
 }

@@ -214,8 +214,7 @@ class Dynamo:
 
         return None
 
-    @staticmethod
-    def parse_def_to_curve(block):
+    def parse_def_to_curve(self, block):
         block.setdefault('shape', 'peaks')
         block.setdefault('start', 0.)
         block.setdefault('end', 0.)
@@ -223,19 +222,20 @@ class Dynamo:
         block.setdefault('default', 0.)
         table = list(map(Dynamo.def_content, block['content']))
 
-        block_start = float(block['start'])
-        block_end = float(block['end']) - block_start
-        end_factor = f" * theta({to_glsl(block_end)}-b)" if block_end > 0 else ""
+        block_start = float(block['start']) - self.bpm_block['first']
+        block_length = float(block['end']) - float(block['start'])
+
+        print("BLOCK", block_start, self.bpm_block['first'])
 
         function = f"float {block['name']}(float b)\n{{" + LF4
 
         if block_start > 0:
-            function += f"b -= {to_glsl(float(block['start']))};" + LF4
+            function += f"b -= {to_glsl(block_start)};" + LF4
 
         function += "if (b<0.) return 0.;" + LF4
 
-        if block_end > 0:
-            function += f"if (b>{to_glsl(block_end)}) return 0.;" + LF4
+        if block_length > 0:
+            function += f"if (b>{to_glsl(block_length)}) return 0.;" + LF4
 
         if block['repeat'] > 0:
             function += f"b = mod(b, {to_glsl(float(block['repeat']))});" + LF4
@@ -266,7 +266,7 @@ class Dynamo:
         return f"float {block['name']}(float b) {{return {block['src']}(b-{to_glsl(shift)});}}"
 
     def parse_defs_to_curves(self):
-        def_codes = [Dynamo.parse_def_to_curve(block) for block in self.def_blocks if block['cmd'] == 'def']
+        def_codes = [self.parse_def_to_curve(block) for block in self.def_blocks if block['cmd'] == 'def']
         copy_codes = [self.process_def_copies(block) for block in self.def_blocks if block['cmd'] == 'copy']
         return '\n'.join([*def_codes, *copy_codes])
 
