@@ -16,8 +16,9 @@ def to_glsl(value):
 
 helper_code = """
 // dynamo210 beat/light sync GLSL function generator by QM (April 2021, corona fuck yeah)
-// usage:
-// get current beat by B =_beat(iTime), then call your curve functions with argument B
+// usage: get current beat by
+// float B =_beat(iTime);
+// then call your curve functions with argument B
 
 float smstep(float a, float b, float x) {return smoothstep(a, b, clamp(x, a, b));}
 float theta(float x) { return smstep(0.,1e-3,x); }
