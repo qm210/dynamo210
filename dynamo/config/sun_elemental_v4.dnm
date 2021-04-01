@@ -33,7 +33,7 @@ def anfangsplingpling shape=expeak
 .5
 .75
 
-def basiclead shape=expeak repeat=2
+def basiclead shape=expeak start=5 repeat=2
 0
 .125
 .25

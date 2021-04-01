@@ -36,6 +36,7 @@ float anfangsplingpling(float b)
 }
 float basiclead(float b)
 {
+    b -= 5.;
     if (b<0.) return 0.;
     b = mod(b, 2.);
     float r = 0.;

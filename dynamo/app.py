@@ -1,5 +1,6 @@
 import argparse
 import math
+import pyperclip
 from .utils import type_adjusted_args, this_and_next_element
 
 LF4 = '\n' + 4 * ' '
@@ -37,6 +38,7 @@ class Dynamo:
     def __init__(self, parser):
         parser.add_argument("config")
         parser.add_argument("--print", action="store_true")
+        parser.add_argument("--clip", action="store_true")
         self.args = parser.parse_args()
 
         config_file = f"dynamo/config/{self.args.config}.dnm"
@@ -275,10 +277,15 @@ class Dynamo:
                 file.write(def_code)
         print("Written:", out_file)
 
-        if self.args.print:
-            print("=== Content:")
-            with open(out_file, 'r') as file:
-                print(file.read())
+        open_file = self.args.print or self.args.clip
+        if open_file:
+            content = open(out_file, 'r').read()
+            if self.args.print:
+                print("=== Content:")
+                print(content)
+            if self.args.clip:
+                pyperclip.copy(content)
+
 
 if __name__ == '__main__':
     Dynamo.main()
