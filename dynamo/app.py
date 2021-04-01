@@ -224,7 +224,7 @@ class Dynamo:
                 term = to_glsl(level) + '*' + term
             function += 'r += ' + term + ';' + LF4
 
-        function += f"return r * theta(b){end_factor};\n}}\n"
+        function += f"return r * theta(b){end_factor};\n}}"
 
         return function
 
@@ -236,7 +236,7 @@ class Dynamo:
             return ''
 
         shift = float(block['start']) - float(original['start'])
-        return f"float {block['name']}(float b) {{return {block['src']}(b-{to_glsl(shift)});}}\n"
+        return f"float {block['name']}(float b) {{return {block['src']}(b-{to_glsl(shift)});}}"
 
     def parse_defs_to_curves(self):
         def_codes = [Dynamo.parse_def_to_curve(block) for block in self.def_blocks if block['cmd'] == 'def']

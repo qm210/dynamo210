@@ -23,5 +23,4 @@ float ONCE_PER_BEAT(float b)
     r += smstep(0., 0.010, (b-0.500));
     return r * theta(b);
 }
-
-float LATER_ALLIGATOR(float b){return ONCE_PER_BEAT(b-6.);}
+float LATER_ALLIGATOR(float b) {return ONCE_PER_BEAT(b-6.);}
