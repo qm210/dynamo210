@@ -225,8 +225,8 @@ class Dynamo:
             return f"smstep(0., {attack_glsl}, {var})"
 
         elif shape == 'expeak':
-            beta = math.log(2) / line['decay']
-            alpha = line['attack'] * beta
+            beta = math.log(2) / float(line['decay'])
+            alpha = float(line['attack']) * beta
             norm = math.pow(alpha/(beta*math.e), alpha)
             return f"{to_glsl(norm)} * pow({var}, {to_glsl(alpha)}) * exp(-{to_glsl(beta)}*{var})"
 
