@@ -132,8 +132,6 @@ class Dynamo:
                 slope = (end['bpm'] - start['bpm']) / (b_end - b_start)
             flat_time = (b_end - b_start) / start['bpm']
 
-            print("leeeeel", b_start, b_end, slope, flat_time, end['bpm'] - start['bpm'])
-
             if slope == 0:
                 current_minute += flat_time
                 beat_factor = start['bpm'] / 60.
