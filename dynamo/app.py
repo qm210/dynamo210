@@ -7,10 +7,10 @@ LF4 = '\n' + 4 * ' '
 def to_glsl(value):
     result = str(value)
     if type(value) == float:
-        result = f"{value:.3f}"
+        result = f"{value:.4f}"
         if result.count('.') == 0:
             return result + '.'
-        if result[-4:] == '.000':
+        if result[-4:] == '.0000':
             return result[:-3]
     return result
 
@@ -199,7 +199,7 @@ class Dynamo:
             return f"smstep(0., {attack_glsl}, {var})"
 
         elif shape == 'expeak':
-            beta = line['decay'] / math.log(2) # / math.log(2) ?
+            beta = line['decay']
             alpha = line['attack'] * beta
             norm = math.pow(alpha/(beta*math.e), alpha)
             print(line, alpha, beta, norm)

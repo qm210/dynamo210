@@ -7,19 +7,19 @@
 
 float smstep(float a, float b, float x) {return smoothstep(a, b, clamp(x, a, b));}
 float theta(float x) { return smstep(0.,1e-3,x); }
-float _t_[8] = float[8](0.,43.910,177.244,178.253,179.423,180.710,182.077,196.061);
-float _b_[8] = float[8](0.,72.,360.,362.,364.,366.,368.,388.);
-float _fac_[8] = float[8](91.797,2.160,-12.414,-18.098,-27.974,-45.144,1.430,1.430); // fac is bps for flat segments, else... something else.
-float _slope_[8] = float[8](0.013,0.,-0.174,-0.100,-0.058,-0.033,0.,0.);
+float _t_[10] = float[10](0.0000,25.8494,35.1844,43.1978,176.5312,177.5408,178.7104,179.9979,181.3648,195.3485);
+float _b_[10] = float[10](0.0000,36.0000,52.0000,68.0000,356.0000,358.0000,360.0000,362.0000,364.0000,384.0000);
+float _fac_[10] = float[10](114.1664,102.1082,92.5939,2.1600,-12.4144,-18.0975,-27.9740,-45.1443,1.4302,1.4302); // fac is bps for flat segments, else... something else.
+float _slope_[10] = float[10](0.0106,0.0156,0.0199,0.0000,-0.1740,-0.1001,-0.0576,-0.0332,0.0000,0.0000);
 float _beat(float t)
 {
-    int it; for(it = 0; it < 7 && _t_[it + 1] < t; it++);
+    int it; for(it = 0; it < 9 && _t_[it + 1] < t; it++);
     if (_slope_[it] == 0.) return _b_[it] + (t - _t_[it]) * _fac_[it];
     return _b_[it] + _fac_[it] * (exp(_slope_[it]*(t - _t_[it])) - 1.);
 }
 float FOUR_ON_FLOOR(float b)
 {
-    float r = 0.;
-    r += 0.909 * pow(mod(b, 0.25), 0.029) * exp(-0.289*mod(b, 0.25));
+    float r = 0.0000;
+    r += 0.9944 * pow(mod(b, 1.0), 0.0010) * exp(-0.1000*mod(b, 1.0));
     return r * theta(b);
 }

@@ -20,6 +20,6 @@ float _beat(float t)
 float FOUR_ON_FLOOR(float b)
 {
     float r = 0.;
-    r += 0.998 * pow(mod(b, 1.0), 0.) * exp(-0.289*mod(b, 1.0));
+    r += 0.998 * pow(mod(b, 1.0), 0.) * exp(-0.200*mod(b, 1.0));
     return r * theta(b);
 }
