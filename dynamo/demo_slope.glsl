@@ -7,10 +7,10 @@
 
 float smstep(float a, float b, float x) {return smoothstep(a, b, clamp(x, a, b));}
 float theta(float x) { return smstep(0.,1e-3,x); }
-float _t_[2] = float[2](0.,8.062);
-float _b_[2] = float[2](0.,16.);
-float _fac_[2] = float[2](24.421,2.526); // fac is bps for flat segments, else... something else.
-float _slope_[2] = float[2](0.063,0.);
+float _t_[2] = float[2](0.,8.0625);
+float _b_[2] = float[2](0.,4.);
+float _fac_[2] = float[2](6.1053,.6316);
+float _slope_[2] = float[2](.0625,0.);
 float _beat(float t)
 {
     int it; for(it = 0; it < 1 && _t_[it + 1] < t; it++);
@@ -19,7 +19,8 @@ float _beat(float t)
 }
 float FOUR_ON_FLOOR(float b)
 {
+    if (b<0.) return 0.;
     float r = 0.;
-    r += 0.998 * pow(mod(b, 1.0), 0.) * exp(-0.200*mod(b, 1.0));
+    r += .973 * pow(mod(b, 1.0), .0035) * exp(-3.4657*mod(b, 1.0));
     return r * theta(b);
 }
