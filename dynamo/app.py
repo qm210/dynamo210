@@ -18,6 +18,7 @@ helper_code = """
 // dynamo210 beat/light sync GLSL function generator by QM (April 2021, corona fuck yeah)
 // usage: get current beat by
 // float B =_beat(iTime);
+// depending on the nature of stuff, you might need a constant offset like iTime - 0.05, idk
 // then call your curve functions with argument B
 
 float smstep(float a, float b, float x) {return smoothstep(a, b, clamp(x, a, b));}
@@ -129,27 +130,27 @@ class Dynamo:
                 slope = start['slope']
             else:
                 slope = (end['bpm'] - start['bpm']) / (b_end - b_start)
-            offset = start['bpm'] - slope * b_start
             flat_time = (b_end - b_start) / start['bpm']
+
+            print("leeeeel", b_start, b_end, slope, flat_time, end['bpm'] - start['bpm'])
 
             if slope == 0:
                 current_minute += flat_time
-                beat_factor = start['bpm']
+                beat_factor = start['bpm'] / 60.
             else:
                 current_minute += math.log((slope * flat_time + 1)) / slope
                 beat_factor = start['bpm'] / slope
 
-            beat_table[-1]['slope'] = slope
+            beat_table[-1]['slope'] = slope / 60
             beat_table[-1]['factor'] = beat_factor
             beat_table.append({'time': current_minute, 'beat': end['beat']})
 
             b_start = to_glsl(b_start)
             b_end = to_glsl(b_end)
             slope = to_glsl(slope)
-            offset = to_glsl(offset)
 
         beat_table[-1]['slope'] = 0.0
-        beat_table[-1]['factor'] = end['bpm']
+        beat_table[-1]['factor'] = end['bpm'] / 60.
         N = len(beat_table)
 
         def get_floatarray(name, selector):
@@ -160,11 +161,12 @@ class Dynamo:
 
         array_t = get_floatarray('_t_', lambda step: to_glsl(60 * step['time']))
         array_b = get_floatarray('_b_', lambda step: to_glsl(step['beat']))
-        array_fac = get_floatarray('_fac_', lambda step: to_glsl(step['factor']/60.))
+        array_fac = get_floatarray('_fac_', lambda step: to_glsl(step['factor']))
+        array_fac += ' // fac is bps for flat segments, else... something else.'
         array_slope = get_floatarray('_slope_', lambda step: to_glsl(step['slope']))
 
         function = 'float _beat(float t)\n{' + LF4
-        function += f"int it; for(it = 0; it < {N - 2} && _t_[it + 1] < t; it++);" + LF4
+        function += f"int it; for(it = 0; it < {N - 1} && _t_[it + 1] < t; it++);" + LF4
         function += "if (_slope_[it] == 0.) return _b_[it] + (t - _t_[it]) * _fac_[it];" + LF4
         function += "return _b_[it] + _fac_[it] * (exp(_slope_[it]*(t - _t_[it])) - 1.);"
         function += "\n}\n"
@@ -202,6 +204,7 @@ class Dynamo:
             beta = line['decay'] / math.log(2) # / math.log(2) ?
             alpha = line['attack'] * beta
             norm = math.pow(alpha/(beta*math.e), alpha)
+            print(line, alpha, beta, norm)
             return f"{to_glsl(norm)} * pow({var}, {to_glsl(alpha)}) * exp(-{to_glsl(beta)}*{var})"
 
         return None
