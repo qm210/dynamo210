@@ -325,7 +325,7 @@ class Dynamo:
         print(f"float {var} = _beat(iTime);")
         for cumul in cumuls:
             cumulated = '+'.join(cumuls[cumul])
-            print(f"float {cumul} = {cumulated};")
+            print(f"float {cumul} = clamp({cumulated},0.,1.);")
 
 
 if __name__ == '__main__':
