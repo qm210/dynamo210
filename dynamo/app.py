@@ -208,9 +208,10 @@ class Dynamo:
         line.setdefault('attack', block.get('attack', 0.01))
         line.setdefault('decay', block.get('decay', 0.25))
         line.setdefault('repeat', 0.)
+        # insert here for more DEF LINE arguments
 
         if line['beat'] != 0:
-            var = f"({var}-{to_glsl(line['beat'])})"
+            var = f"({var}-{to_glsl(line['beat'] / block['scale'])})"
 
         if line['repeat'] != 0:
             var = f"mod({var}, {line['repeat']})"
@@ -238,12 +239,13 @@ class Dynamo:
         block.setdefault('end', 0.)
         block.setdefault('repeat', 0.)
         block.setdefault('default', 0.)
+        block.setdefault('scale', 1.)
+        # insert here for more DEF HEADER arguments
+
         table = list(map(Dynamo.def_content, block['content']))
 
         block_start = float(block['start']) - self.bpm_block['first']
         block_length = float(block['end']) - float(block['start'])
-
-        print("BLOCK", block_start, self.bpm_block['first'])
 
         function = f"float {block['name']}(float b)\n{{" + LF4
 
