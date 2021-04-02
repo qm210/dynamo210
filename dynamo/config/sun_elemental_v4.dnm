@@ -27,13 +27,13 @@ bpm beats=4 first=1
 def ONCE_A_BEAT shape=expeak
 0   level=1   attack=0.01     decay=0.2    repeat=1.
 
-def anfangsplingpling start=5 shape=step
+def anfangsplingpling start=5 shape=step cumul=extra
 0   level=.25
 .25 level=.25
 .5  level=.25
 .75 level=.25
 
-def basiclead shape=peak start=6 repeat=2
+def basiclead shape=peak start=6 end=18 repeat=2 cumul=lead
 0
 .125
 .25
@@ -44,10 +44,10 @@ def basiclead shape=peak start=6 repeat=2
 1.25
 1.5
 
-copy backgroundlead1 basiclead start=59 end=63
-copy backgroundlead2 basiclead start=67 end=71
+copy backgroundlead1 basiclead start=59 end=63 cumul=extra
+copy backgroundlead2 basiclead start=67 end=71 cumul=extra
 
-def basiclead_18_to_26 shape=peak start=18 end=26 repeat=2 scale=8
+def basiclead_18_to_26 shape=peak start=18 end=26 repeat=2 scale=8 cumul=lead
 0
 1
 2
@@ -61,14 +61,16 @@ def basiclead_18_to_26 shape=peak start=18 end=26 repeat=2 scale=8
 13
 14
 
-def basiclead_27_to_35 shape=expeak start=27 end=35
+def basiclead_27_to_35 shape=expeak start=27 end=35 cumul=lead
 0 repeat=.125
 
-def break1_51_to_53 shape=expeak start=51 end=53
+def break1_51_to_53 shape=expeak start=51 end=53 cumul=drum_basic
 0 repeat=.125 decay=.05
-0 level=.1 repeat=.167 decay=.02
 
-def basic_kick_10_to_26 shape=peak start=10 end=26 repeat=4
+def break2_51_to_53 shape=expeak start=51 end=51 cumul=drum_extra
+0 level=.2 repeat=.167 decay=.02
+
+def basic_kick_10_to_26 shape=peak start=10 end=26 repeat=4 cumul=drum_basic
 0
 3/8
 5/8
@@ -86,7 +88,7 @@ def basic_kick_10_to_26 shape=peak start=10 end=26 repeat=4
 3.5
 3.75
 
-def basic_clap_10_to_26 shape=expeak start=10 end=26 repeat=4 attack=.01 decay=.02
+def basic_clap_10_to_26 shape=expeak start=10 end=26 repeat=4 attack=.01 decay=.02 cumul=drum_extra
 1/4
 11/16	level=.1
 12/16
@@ -110,11 +112,11 @@ def basic_clap_10_to_26 shape=expeak start=10 end=26 repeat=4 attack=.01 decay=.
 3+14/16 level=.3
 3+15/16 level=.05
 
-def dancebeat_27_to_51 start=27 end=51
+def dancebeat_27_to_51 start=27 end=51 cumul=drum_basic
 0       level=.6 repeat=.5
 .25              repeat=.5
 
-def dancebeat2_53_to_71 start=53 end=71 scale=8 decay=.25 repeat=4
+def dancebeat2_53_to_71 start=53 end=71 scale=8 decay=.25 repeat=4 cumul=drum_basic
 0   level=0.7
 2    level=1.0
 4   level=0.7
@@ -142,7 +144,11 @@ def dancebeat2_53_to_71 start=53 end=71 scale=8 decay=.25 repeat=4
 28
 30 level=.8
 
-def dancelead_35_to_51 start=35 end=51 scale=8
+def dancebeat_75_to_91 start=75 end=91 cumul=drum_basic
+0       level=.6 repeat=.5
+.25              repeat=.5
+
+def dancelead_35_to_51 start=35 end=51 scale=8 cumul=lead
  0  level=.7
  3  level=.8
  8  level=.9
@@ -154,7 +160,9 @@ def dancelead_35_to_51 start=35 end=51 scale=8
  28 level=.5
  30 level=.6
 
-def complexlead_55_to_71 start=55 end=71 repeat=8 attack=.2 decay=.4 scale=8
+ copy dancelead_35_to_51 dancelead_75_to_91 start=75 end=91 cumul=lead
+
+def complexlead_55_to_71 start=55 end=71 repeat=8 attack=.2 decay=.4 scale=8 cumul=lead
 0
 5
 10
@@ -170,7 +178,7 @@ def complexlead_55_to_71 start=55 end=71 repeat=8 attack=.2 decay=.4 scale=8
 56
 
 
-def complexbass_55_to_71 start=55 end=71 repeat=8 attach=.05 decay=.8 scale=8
+def complexbass_55_to_71 start=55 end=71 repeat=8 attach=.05 decay=.8 scale=8 cumul=extra
 0
 1
 3
@@ -214,7 +222,7 @@ def complexbass_55_to_71 start=55 end=71 repeat=8 attach=.05 decay=.8 scale=8
 56
 59
 
-def drumfill_71_to_75 start=71 end=75 shape=expeak attack=.01 decay=.3
+def drumfill_71_to_75 start=71 end=75 shape=expeak attack=.01 decay=.3 cumul=drum_extra
 0 level=.4
 1 level=.4
 2 level=.4

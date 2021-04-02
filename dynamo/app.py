@@ -21,9 +21,9 @@ def to_glsl(value):
 helper_code = """
 // dynamo210 beat/light sync GLSL function generator by QM (April 2021, corona fuck yeah)
 // usage: get current beat by
-// float B =_beat(iTime);
+// float b =_beat(iTime);
 // depending on the nature of stuff, you might need a constant offset like iTime - 0.05, idk
-// then call your curve functions with argument B
+// then call your curve functions with argument b
 
 float smstep(float a, float b, float x) {return smoothstep(a, b, clamp(x, a, b));}
 float theta(float x) { return smstep(0.,1e-3,x); }
@@ -65,6 +65,8 @@ class Dynamo:
         def_code = self.parse_defs_to_curves()
 
         self.write_to_glsl(bpm_code, def_code)
+
+        self.print_cumuls('b')
 
     @staticmethod
     def new_block(cmd, parsed_line = []):
@@ -231,15 +233,15 @@ class Dynamo:
             norm = math.pow(alpha/(beta*math.e), alpha)
             return f"{to_glsl(norm)} * pow({var}, {to_glsl(alpha)}) * exp(-{to_glsl(beta)}*{var})"
 
-        return None
-
     def parse_def_to_curve(self, block):
-        block.setdefault('shape', 'peaks')
+        block.setdefault('shape', 'expeak')
         block.setdefault('start', 0.)
         block.setdefault('end', 0.)
         block.setdefault('repeat', 0.)
         block.setdefault('default', 0.)
         block.setdefault('scale', 1.)
+        block.setdefault('attack', 0.01)
+        block.setdefault('decay', 0.25)
         # insert here for more DEF HEADER arguments
 
         table = list(map(Dynamo.def_content, block['content']))
@@ -307,6 +309,23 @@ class Dynamo:
                 print(content)
             if self.args.clip:
                 pyperclip.copy(content)
+
+    def print_cumuls(self, var):
+        LF = '\n'
+        cumuls = {}
+        for block in self.def_blocks:
+            cumul = block.get('cumul')
+            if cumul is None:
+                continue
+            if cumul not in cumuls:
+                cumuls[cumul] = []
+            cumuls[cumul].append(f"{block['name']}({var})")
+
+        print()
+        print(f"float {var} = _beat(iTime);")
+        for cumul in cumuls:
+            cumulated = '+'.join(cumuls[cumul])
+            print(f"float {cumul} = {cumulated};")
 
 
 if __name__ == '__main__':
