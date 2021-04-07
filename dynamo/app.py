@@ -1,6 +1,7 @@
 import argparse
 import math
 import pyperclip
+from copy import deepcopy
 from .utils import type_adjusted_args, this_and_next_element
 
 LF4 = '\n' + 4 * ' '
@@ -201,12 +202,17 @@ class Dynamo:
 
     @staticmethod
     def def_content(line):
-        args = type_adjusted_args(line[1:], dtype=float)
-        return {'beat': Dynamo.calc(line[0]), **args}
+        beat = Dynamo.calc(line.pop(0))
+        level = float(line.pop(0)) if len(line) > 0 and not "=" in line[0] else None
+        args = type_adjusted_args(line, dtype=float)
+        if level is None:
+            level = args.get('level', 1.)
+        return {'beat': beat, 'level': level, **args}
 
     @staticmethod
-    def def_term(line, block, var='b'):
+    def def_term(block, line, nextline=None, var='b'):
         shape = line.get('shape', block['shape'])
+        level = line.get('level', 1.)
         line.setdefault('attack', block.get('attack', 0.01))
         line.setdefault('decay', block.get('decay', 0.25))
         line.setdefault('repeat', 0.)
@@ -221,17 +227,32 @@ class Dynamo:
         attack_glsl = to_glsl(line['attack'])
 
         if shape == 'peak':
-            return f"theta({var}) * (2.*smstep(-{attack_glsl}, {attack_glsl}, {var})-1.)" + \
+            result = f"theta({var}) * (2.*smstep(-{attack_glsl}, {attack_glsl}, {var})-1.)" + \
                 f"*(1.-smstep(0., {to_glsl(line['decay'])}, {var}-{attack_glsl}))"
 
         elif shape == 'step':
-            return f"smstep(0., {attack_glsl}, {var})"
+            result = f"smstep(0., {attack_glsl}, {var})"
 
         elif shape == 'expeak':
             beta = math.log(2) / float(line['decay'])
             alpha = float(line['attack']) * beta
             norm = math.pow(alpha/(beta*math.e), alpha)
-            return f"{to_glsl(norm)} * pow({var}, {to_glsl(alpha)}) * exp(-{to_glsl(beta)}*{var})"
+            result = f"{to_glsl(norm)} * pow({var}, {to_glsl(alpha)}) * exp(-{to_glsl(beta)}*{var})"
+
+        elif shape == 'smoof':
+            result = f"({var} < 2. ? 1. : .0)"
+            if nextline is None:
+                return None
+            print("leeel!", line, nextline, result)
+
+        else:
+            return f"0. /* {block['name']}: shape {shape} unkonwn */"
+
+        if level != 1.:
+            result = to_glsl(level) + '*' + result
+
+        return result
+
 
     def parse_def_to_curve(self, block):
         block.setdefault('shape', 'expeak')
@@ -243,8 +264,6 @@ class Dynamo:
         block.setdefault('attack', 0.01)
         block.setdefault('decay', 0.25)
         # insert here for more DEF HEADER arguments
-
-        table = list(map(Dynamo.def_content, block['content']))
 
         block_start = float(block['start']) - self.bpm_block['first']
         block_length = float(block['end']) - float(block['start'])
@@ -264,14 +283,12 @@ class Dynamo:
 
         function += f"float r = {to_glsl(float(block['default']))};" + LF4
 
-        for line in table:
-            level = line.get('level', 1.)
-            term = Dynamo.def_term(line, block)
-            if term is None:
-                term = to_glsl(level)
-            elif level != 1.:
-                term = to_glsl(level) + '*' + term
-            function += 'r += ' + term + ';' + LF4
+        table = list(map(Dynamo.def_content, block['content']))
+
+        for line, nextline in this_and_next_element(table, with_last_empty=True):
+            term = Dynamo.def_term(block, line, nextline)
+            if term is not None:
+                function += 'r += ' + term + ';' + LF4
 
         function += f"return r * theta(b);\n}}"
 

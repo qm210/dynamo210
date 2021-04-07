@@ -316,6 +316,12 @@ float drumfill_71_to_75(float b)
     r += .8785 * pow((b-3.75), .0231) * exp(-2.3105*(b-3.75));
     return r * theta(b);
 }
-
-
+float evol1(float b)
+{
+    if (b<0.) return 0.;
+    float r = 0.;
+    return r * theta(b);
+}
+float backgroundlead1(float b) {return basiclead(b-53.);}
+float backgroundlead2(float b) {return basiclead(b-61.);}
 float dancelead_75_to_91(float b) {return dancelead_35_to_51(b-40.);}

@@ -44,8 +44,8 @@ def basiclead shape=peak start=6 end=18 repeat=2 cumul=lead
 1.25
 1.5
 
-copy backgroundlead1 basiclead start=59 end=63 cumul=extra
-copy backgroundlead2 basiclead start=67 end=71 cumul=extra
+copy basiclead backgroundlead1 start=59 end=63 cumul=extra
+copy basiclead backgroundlead2 start=67 end=71 cumul=extra
 
 def basiclead_18_to_26 shape=peak start=18 end=26 repeat=2 scale=8 cumul=lead
 0
@@ -231,6 +231,9 @@ def drumfill_71_to_75 start=71 end=75 shape=expeak attack=.01 decay=.3 cumul=dru
 3.375 level=.7
 3.625 level=.7
 3.75
+
+def evol1 shape=smoof
+0
 
 
 # can have ONE BPM, beats=4 for 4 beats per bar, e.g. 4/4 (because the units are bars, not beats)

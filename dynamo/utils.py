@@ -22,5 +22,8 @@ def type_adjusted_value(value):
         pass
     return value
 
-def this_and_next_element(list):
-    return zip(list, list[1:])
+def this_and_next_element(list, with_last_empty=False):
+    shifted_list = list[1:]
+    if with_last_empty:
+        shifted_list.append(None)
+    return zip(list, shifted_list)
