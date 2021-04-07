@@ -233,7 +233,9 @@ def drumfill_71_to_75 start=71 end=75 shape=expeak attack=.01 decay=.3 cumul=dru
 3.75
 
 def evol1 shape=smoof
-0
+0   0.7
+0.5 1.2
+1   1.4
 
 
 # can have ONE BPM, beats=4 for 4 beats per bar, e.g. 4/4 (because the units are bars, not beats)

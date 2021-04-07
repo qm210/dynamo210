@@ -210,7 +210,7 @@ class Dynamo:
         return {'beat': beat, 'level': level, **args}
 
     @staticmethod
-    def def_term(block, line, nextline=None, var='b'):
+    def def_term_single(block, line, nextline=None, var='b'):
         shape = line.get('shape', block['shape'])
         level = line.get('level', 1.)
         line.setdefault('attack', block.get('attack', 0.01))
@@ -225,6 +225,7 @@ class Dynamo:
             var = f"mod({var}, {line['repeat']})"
 
         attack_glsl = to_glsl(line['attack'])
+        level_factor = to_glsl(level) + '*' if level != 1. else ''
 
         if shape == 'peak':
             result = f"theta({var}) * (2.*smstep(-{attack_glsl}, {attack_glsl}, {var})-1.)" + \
@@ -239,19 +240,31 @@ class Dynamo:
             norm = math.pow(alpha/(beta*math.e), alpha)
             result = f"{to_glsl(norm)} * pow({var}, {to_glsl(alpha)}) * exp(-{to_glsl(beta)}*{var})"
 
-        elif shape == 'smoof':
-            result = f"({var} < 2. ? 1. : .0)"
-            if nextline is None:
-                return None
-            print("leeel!", line, nextline, result)
+        else:
+            return f"0. /* {block['name']}: shape {shape} unknown */"
+
+        return level_factor + result
+
+
+    @staticmethod
+    def def_term_interval(block, line, nextline, var='b'):
+        shape = line.get('shape', block['shape'])
+        level = line.get('level', 1.)
+        # insert here for more DEF LINE arguments for interval shapes
+
+        beat_start = line['beat'] / block['scale']
+        beat_end = nextline['beat'] / block['scale']
+
+        next_level = nextline.get('level', 1.)
+
+        if shape == 'smoof':
+            transition = f"smstep({to_glsl(beat_start)}, {to_glsl(beat_end)}, {var})"
+            result = f"mix({to_glsl(level)}, {to_glsl(next_level)}, {transition})"
 
         else:
-            return f"0. /* {block['name']}: shape {shape} unkonwn */"
+            return f"0. /* {block['name']}: shape {shape} unknown */"
 
-        if level != 1.:
-            result = to_glsl(level) + '*' + result
-
-        return result
+        return f"({var} <= {to_glsl(beat_end)}) ? {result} : "
 
 
     def parse_def_to_curve(self, block):
@@ -270,29 +283,37 @@ class Dynamo:
 
         function = f"float {block['name']}(float b)\n{{" + LF4
 
+        function += f"float r = {to_glsl(float(block['default']))};" + LF4
+
         if block_start > 0:
             function += f"b -= {to_glsl(block_start)};" + LF4
 
-        function += "if (b<0.) return 0.;" + LF4
+        function += "if (b<0.) return r;" + LF4
 
         if block_length > 0:
-            function += f"if (b>{to_glsl(block_length)}) return 0.;" + LF4
+            function += f"if (b>{to_glsl(block_length)}) return r;" + LF4
 
         if block['repeat'] > 0:
             function += f"b = mod(b, {to_glsl(float(block['repeat']))});" + LF4
 
-        function += f"float r = {to_glsl(float(block['default']))};" + LF4
-
         table = list(map(Dynamo.def_content, block['content']))
+        is_interval_block = block['shape'] == 'smoof'
 
-        for line, nextline in this_and_next_element(table, with_last_empty=True):
-            term = Dynamo.def_term(block, line, nextline)
-            if term is not None:
+        if is_interval_block:
+            function += 'return '
+            for line, nextline in this_and_next_element(table):
+                # interval terms are chains of "condition ? result : "
+                function += Dynamo.def_term_interval(block, line, nextline)
+            function += 'r;'
+
+        else:
+            for line in table:
+                # single terms are contributing each on their own, i.e. all superimposed
+                term = Dynamo.def_term_single(block, line)
                 function += 'r += ' + term + ';' + LF4
+            function += f"return r * theta(b);"
 
-        function += f"return r * theta(b);\n}}"
-
-        return function
+        return function + '\n}'
 
     def process_def_copies(self, block):
         try:
@@ -326,6 +347,7 @@ class Dynamo:
                 print(content)
             if self.args.clip:
                 pyperclip.copy(content)
+                print("Copied to Clipboard.")
 
     def print_cumuls(self, var):
         LF = '\n'

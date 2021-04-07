@@ -19,16 +19,16 @@ float _beat(float t)
 }
 float ONCE_A_BEAT(float b)
 {
-    if (b<0.) return 0.;
     float r = 0.;
+    if (b<0.) return r;
     r += .8234 * pow(mod(b, 1.0), .0347) * exp(-3.4657*mod(b, 1.0));
     return r * theta(b);
 }
 float anfangsplingpling(float b)
 {
-    b -= 4.;
-    if (b<0.) return 0.;
     float r = 0.;
+    b -= 4.;
+    if (b<0.) return r;
     r += .25*smstep(0., .01, b);
     r += .25*smstep(0., .01, (b-.25));
     r += .25*smstep(0., .01, (b-.5));
@@ -37,11 +37,11 @@ float anfangsplingpling(float b)
 }
 float basiclead(float b)
 {
-    b -= 5.;
-    if (b<0.) return 0.;
-    if (b>12.) return 0.;
-    b = mod(b, 2.);
     float r = 0.;
+    b -= 5.;
+    if (b<0.) return r;
+    if (b>12.) return r;
+    b = mod(b, 2.);
     r += theta(b) * (2.*smstep(-.01, .01, b)-1.)*(1.-smstep(0., .25, b-.01));
     r += theta((b-.125)) * (2.*smstep(-.01, .01, (b-.125))-1.)*(1.-smstep(0., .25, (b-.125)-.01));
     r += theta((b-.25)) * (2.*smstep(-.01, .01, (b-.25))-1.)*(1.-smstep(0., .25, (b-.25)-.01));
@@ -55,11 +55,11 @@ float basiclead(float b)
 }
 float basiclead_18_to_26(float b)
 {
-    b -= 17.;
-    if (b<0.) return 0.;
-    if (b>8.) return 0.;
-    b = mod(b, 2.);
     float r = 0.;
+    b -= 17.;
+    if (b<0.) return r;
+    if (b>8.) return r;
+    b = mod(b, 2.);
     r += theta(b) * (2.*smstep(-.01, .01, b)-1.)*(1.-smstep(0., .25, b-.01));
     r += theta((b-.125)) * (2.*smstep(-.01, .01, (b-.125))-1.)*(1.-smstep(0., .25, (b-.125)-.01));
     r += theta((b-.25)) * (2.*smstep(-.01, .01, (b-.25))-1.)*(1.-smstep(0., .25, (b-.25)-.01));
@@ -76,37 +76,37 @@ float basiclead_18_to_26(float b)
 }
 float basiclead_27_to_35(float b)
 {
-    b -= 26.;
-    if (b<0.) return 0.;
-    if (b>8.) return 0.;
     float r = 0.;
+    b -= 26.;
+    if (b<0.) return r;
+    if (b>8.) return r;
     r += .8561 * pow(mod(b, 0.125), .0277) * exp(-2.7726*mod(b, 0.125));
     return r * theta(b);
 }
 float break1_51_to_53(float b)
 {
-    b -= 50.;
-    if (b<0.) return 0.;
-    if (b>2.) return 0.;
     float r = 0.;
+    b -= 50.;
+    if (b<0.) return r;
+    if (b>2.) return r;
     r += .4598 * pow(mod(b, 0.125), .1386) * exp(-13.8629*mod(b, 0.125));
     return r * theta(b);
 }
 float break2_51_to_53(float b)
 {
-    b -= 50.;
-    if (b<0.) return 0.;
     float r = 0.;
+    b -= 50.;
+    if (b<0.) return r;
     r += .2*.1433 * pow(mod(b, 0.167), .3466) * exp(-34.6574*mod(b, 0.167));
     return r * theta(b);
 }
 float basic_kick_10_to_26(float b)
 {
-    b -= 9.;
-    if (b<0.) return 0.;
-    if (b>16.) return 0.;
-    b = mod(b, 4.);
     float r = 0.;
+    b -= 9.;
+    if (b<0.) return r;
+    if (b>16.) return r;
+    b = mod(b, 4.);
     r += theta(b) * (2.*smstep(-.01, .01, b)-1.)*(1.-smstep(0., .25, b-.01));
     r += theta((b-.375)) * (2.*smstep(-.01, .01, (b-.375))-1.)*(1.-smstep(0., .25, (b-.375)-.01));
     r += theta((b-.625)) * (2.*smstep(-.01, .01, (b-.625))-1.)*(1.-smstep(0., .25, (b-.625)-.01));
@@ -127,11 +127,11 @@ float basic_kick_10_to_26(float b)
 }
 float basic_clap_10_to_26(float b)
 {
-    b -= 9.;
-    if (b<0.) return 0.;
-    if (b>16.) return 0.;
-    b = mod(b, 4.);
     float r = 0.;
+    b -= 9.;
+    if (b<0.) return r;
+    if (b>16.) return r;
+    b = mod(b, 4.);
     r += .1433 * pow((b-.25), .3466) * exp(-34.6574*(b-.25));
     r += .1*.1433 * pow((b-.6875), .3466) * exp(-34.6574*(b-.6875));
     r += .1433 * pow((b-.75), .3466) * exp(-34.6574*(b-.75));
@@ -158,21 +158,21 @@ float basic_clap_10_to_26(float b)
 }
 float dancebeat_27_to_51(float b)
 {
-    b -= 26.;
-    if (b<0.) return 0.;
-    if (b>24.) return 0.;
     float r = 0.;
+    b -= 26.;
+    if (b<0.) return r;
+    if (b>24.) return r;
     r += .6*.8561 * pow(mod(b, 0.5), .0277) * exp(-2.7726*mod(b, 0.5));
     r += .8561 * pow(mod((b-.25), 0.5), .0277) * exp(-2.7726*mod((b-.25), 0.5));
     return r * theta(b);
 }
 float dancebeat2_53_to_71(float b)
 {
-    b -= 52.;
-    if (b<0.) return 0.;
-    if (b>18.) return 0.;
-    b = mod(b, 4.);
     float r = 0.;
+    b -= 52.;
+    if (b<0.) return r;
+    if (b>18.) return r;
+    b = mod(b, 4.);
     r += .7*.8561 * pow(b, .0277) * exp(-2.7726*b);
     r += .8561 * pow((b-.25), .0277) * exp(-2.7726*(b-.25));
     r += .7*.8561 * pow((b-.5), .0277) * exp(-2.7726*(b-.5));
@@ -202,20 +202,20 @@ float dancebeat2_53_to_71(float b)
 }
 float dancebeat_75_to_91(float b)
 {
-    b -= 74.;
-    if (b<0.) return 0.;
-    if (b>16.) return 0.;
     float r = 0.;
+    b -= 74.;
+    if (b<0.) return r;
+    if (b>16.) return r;
     r += .6*.8561 * pow(mod(b, 0.5), .0277) * exp(-2.7726*mod(b, 0.5));
     r += .8561 * pow(mod((b-.25), 0.5), .0277) * exp(-2.7726*mod((b-.25), 0.5));
     return r * theta(b);
 }
 float dancelead_35_to_51(float b)
 {
-    b -= 34.;
-    if (b<0.) return 0.;
-    if (b>16.) return 0.;
     float r = 0.;
+    b -= 34.;
+    if (b<0.) return r;
+    if (b>16.) return r;
     r += .7*.8561 * pow(b, .0277) * exp(-2.7726*b);
     r += .8*.8561 * pow((b-.375), .0277) * exp(-2.7726*(b-.375));
     r += .9*.8561 * pow((b-1.), .0277) * exp(-2.7726*(b-1.));
@@ -230,11 +230,11 @@ float dancelead_35_to_51(float b)
 }
 float complexlead_55_to_71(float b)
 {
-    b -= 54.;
-    if (b<0.) return 0.;
-    if (b>16.) return 0.;
-    b = mod(b, 8.);
     float r = 0.;
+    b -= 54.;
+    if (b<0.) return r;
+    if (b>16.) return r;
+    b = mod(b, 8.);
     r += .4048 * pow(b, .3466) * exp(-1.7329*b);
     r += .4048 * pow((b-.625), .3466) * exp(-1.7329*(b-.625));
     r += .4048 * pow((b-1.25), .3466) * exp(-1.7329*(b-1.25));
@@ -252,11 +252,11 @@ float complexlead_55_to_71(float b)
 }
 float complexbass_55_to_71(float b)
 {
-    b -= 54.;
-    if (b<0.) return 0.;
-    if (b>16.) return 0.;
-    b = mod(b, 8.);
     float r = 0.;
+    b -= 54.;
+    if (b<0.) return r;
+    if (b>16.) return r;
+    b = mod(b, 8.);
     r += .9526 * pow(b, .0087) * exp(-.8664*b);
     r += .9526 * pow((b-.125), .0087) * exp(-.8664*(b-.125));
     r += .9526 * pow((b-.375), .0087) * exp(-.8664*(b-.375));
@@ -302,10 +302,10 @@ float complexbass_55_to_71(float b)
 }
 float drumfill_71_to_75(float b)
 {
-    b -= 70.;
-    if (b<0.) return 0.;
-    if (b>4.) return 0.;
     float r = 0.;
+    b -= 70.;
+    if (b<0.) return r;
+    if (b>4.) return r;
     r += .4*.8785 * pow(b, .0231) * exp(-2.3105*b);
     r += .4*.8785 * pow((b-1.), .0231) * exp(-2.3105*(b-1.));
     r += .4*.8785 * pow((b-2.), .0231) * exp(-2.3105*(b-2.));
@@ -318,9 +318,9 @@ float drumfill_71_to_75(float b)
 }
 float evol1(float b)
 {
-    if (b<0.) return 0.;
     float r = 0.;
-    return r * theta(b);
+    if (b<0.) return r;
+    return (b <= .5) ? mix(.7, 1.2, smstep(0., .5, b)) : (b <= 1.) ? mix(1.2, 1.4, smstep(.5, 1., b)) : r;
 }
 float backgroundlead1(float b) {return basiclead(b-53.);}
 float backgroundlead2(float b) {return basiclead(b-61.);}
