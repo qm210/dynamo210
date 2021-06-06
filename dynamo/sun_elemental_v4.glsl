@@ -318,7 +318,7 @@ float drumfill_71_to_75(float b)
 }
 float evol1(float b)
 {
-    float r = 0.;
+    float r = 1.4;
     if (b<0.) return r;
     return (b <= .5) ? mix(.7, 1.2, smstep(0., .5, b)) : (b <= 1.) ? mix(1.2, 1.4, smstep(.5, 1., b)) : r;
 }

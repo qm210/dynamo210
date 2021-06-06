@@ -28,7 +28,11 @@ def ONCE_A_BEAT shape=expeak
 0   level=1   attack=0.01     decay=0.2    repeat=1.
 
 def evol1 shape=smoof
-0   0.7
-0.5 1.2
-1   1.4
+0   0.1
+4   0.32
+7   .28
 
+def evol2 shape=smoof
+0   .3 power=3
+6   .9
+10  .99
