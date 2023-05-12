@@ -1,26 +1,26 @@
+#NEXT: split glsl functionality into own functions, only call in leaves
+#THEN: before leaves, decide whether mode is RUST
+#THEN: implement rust target
+
 import math
-from enum import Enum
+
+from .app import DynamoTarget
 from .utils import type_adjusted_args, this_and_next_element
-from .glsl_utils import to_glsl
+from .language_utils import to_glsl, to_f32
 
 LF4 = '\n' + 4 * ' '
-
-class TARGET(Enum):
-    GLSL = 0
-    RUST = 1
 
 
 class DynamoParser:
 
-    def __init__(self):
+    def __init__(self, target=None):
         self.bpm_block = None
         self.def_blocks = []
 
         self.bpm_curve = None
         self.def_curves = []
 
-        self.target = TARGET.GLSL
-
+        self.target = target if target is not None else DynamoTarget.GLSL
 
     def parse_lines_to_blocks(self):
         block = None
@@ -91,6 +91,14 @@ class DynamoParser:
             level = args.get('level', 1.)
         return {'beat': beat, 'level': level, **args}
 
+
+    def parse_defs_to_curves(self):
+        def_codes = [self.parse_def_to_curve(block) for block in self.def_blocks if block['cmd'] == 'def']
+        copy_codes = [self.process_def_copies(block) for block in self.def_blocks if block['cmd'] == 'copy']
+        return '\n'.join([*def_codes, *copy_codes])
+
+
+    # GLSL-SPECIFIC
     def def_term_single(self, block, line, nextline=None, var='b'):
         shape = line.get('shape', block['shape'])
         level = line.get('level', 1.)
@@ -126,7 +134,7 @@ class DynamoParser:
 
         return level_factor + result
 
-
+    # GLSL-SPECIFIC
     def def_term_interval(self, block, line, nextline, var='b'):
         shape = line.get('shape', block['shape'])
         level = line.get('level', 1.)
@@ -154,7 +162,8 @@ class DynamoParser:
         return f"({var} <= {to_glsl(beat_end)}) ? {result} : "
 
 
-    def parse_bpm_to_glsl(self):
+    # GLSL-SPECIFIC
+    def parse_bpm_to_code(self):
         if self.bpm_block is None:
             quit("No BPM block defined. Can't work with shit.")
 
@@ -205,11 +214,42 @@ class DynamoParser:
 
         beat_table[-1]['slope'] = 0.0
         beat_table[-1]['factor'] = end['bpm'] / 60.
-        N = len(beat_table)
+
+        if self.target == DynamoTarget.Rust:
+            result = self.write_beat_table_rust(beat_table)
+            print("RUST RESULT:")
+            print(result)
+            return result
+
+        return self.write_beat_table_glsl(beat_table)
+
+    @staticmethod
+    def write_beat_table_rust(self, table):
+        N = len(table)
 
         def get_floatarray(name, selector):
             array = []
-            for step in beat_table:
+            for step in table:
+                array.append(to_f32(selector(step)))
+            return f"{name}: [{','.join(array)}],"
+
+        dynamo = '\n'
+        dynamo += "pub const DYNAMO: garlic_dynamo::Dynamo = garlic_dynamo::Dynamo {" + LF4
+        dynamo += get_floatarray('times', lambda step: 60 * step['time']) + LF4
+        dynamo += get_floatarray('beats', lambda step: step['beat']) + LF4
+        dynamo += get_floatarray('factors', lambda step: step['factor']) + LF4
+        dynamo += get_floatarray('slopes', lambda step: step['slope'])
+        dynamo += "\n};\n\n"
+
+        return dynamo
+
+    @staticmethod
+    def write_beat_table_glsl(self, table):
+        N = len(table)
+
+        def get_floatarray(name, selector):
+            array = []
+            for step in table:
                 array.append(selector(step))
             return f"float {name}[{N}] = float[{N}]({','.join(array)});"
 
@@ -226,6 +266,7 @@ class DynamoParser:
 
         return "\n".join([array_t, array_b, array_fac, array_slope, function])
 
+    # GLSL-SPECIFIC
     def parse_def_to_curve(self, block):
         block.setdefault('shape', 'expeak')
         block.setdefault('start', 0.)
@@ -276,6 +317,7 @@ class DynamoParser:
 
         return function + '\n}'
 
+    # GLSL-SPECIFIC
     def process_def_copies(self, block):
         try:
             original = next((it for it in self.def_blocks if it['name'] == block['src']))
@@ -285,8 +327,3 @@ class DynamoParser:
 
         shift = float(block['start']) - float(original['start'])
         return f"float {block['name']}(float b) {{return {block['src']}(b-{to_glsl(shift)});}}"
-
-    def parse_defs_to_curves(self):
-        def_codes = [self.parse_def_to_curve(block) for block in self.def_blocks if block['cmd'] == 'def']
-        copy_codes = [self.process_def_copies(block) for block in self.def_blocks if block['cmd'] == 'copy']
-        return '\n'.join([*def_codes, *copy_codes])
