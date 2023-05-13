@@ -32,7 +32,7 @@ copy FOUR_ON_FLOOR FOF_1 start=45 end=61
 
 # something missing frm 61 .. 63, these are just hi hats I believe?
 
-copy BROKEN start=63 end=79
+copy BROKEN BROKEN_1 start=63 end=79
 
 copy FOF_WITH_GHOST FOFG_1 start=79 end=87
 
@@ -44,6 +44,6 @@ def BEAT_BEAT repeat=2 start=87 end=99
 # can have ONE BPM, beats=4 for 4 beats per bar, e.g. 4/4 (because the units are bars, not beats)
 # <onset beat> <bpm> <points for linear interpolation>
 #
-# def NAME type=none/step/peak/expeak default=0 level=1 start=0 end=0  # end=0 (or not given) is
+# def NAME type=none/step/peak/expeak level=1 start=0 end=0  # end=0 (or not given) is
 # <beat> attack=? decay=? repeat=0 level=1
 

@@ -1,3 +1,6 @@
+from math import ceil
+
+
 def type_adjusted_args(list, dtype=None):
     result = {}
     for elem in list:
@@ -8,6 +11,7 @@ def type_adjusted_args(list, dtype=None):
             pass
         result[key] = type_adjusted_value(value)
     return result
+
 
 def type_adjusted_value(value):
     try:
@@ -22,8 +26,16 @@ def type_adjusted_value(value):
         pass
     return value
 
+
 def this_and_next_element(list, with_last_empty=False):
     shifted_list = list[1:]
     if with_last_empty:
         shifted_list.append(None)
     return zip(list, shifted_list)
+
+
+def safe_ceiled_division(nom, den, fallback=1):
+    try:
+        return ceil(nom / den)
+    except ZeroDivisionError:
+        return fallback

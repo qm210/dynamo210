@@ -4,7 +4,7 @@
 
 import math
 
-from .app import DynamoTarget
+from .defs import DynamoTarget
 from .utils import type_adjusted_args, this_and_next_element
 from .language_utils import to_glsl, to_f32
 
@@ -16,6 +16,7 @@ class DynamoParser:
     def __init__(self, target=None):
         self.bpm_block = None
         self.def_blocks = []
+        self.content = []
 
         self.bpm_curve = None
         self.def_curves = []
@@ -34,19 +35,16 @@ class DynamoParser:
             if cmd in ['bpm', 'def', 'copy']:
                 self.close_block(block)
                 block = DynamoParser.new_block(cmd, parsed_line)
-
             else:
                 block['content'].append(parsed_line)
 
         self.close_block(block)
 
-
     @staticmethod
-    def new_block(cmd, parsed_line = []):
+    def new_block(cmd, parsed_line=None):
         block = {'cmd': cmd, 'content': []}
-        if len(parsed_line) == 0:
+        if not parsed_line:
             return block
-        args = {}
         header = parsed_line[1:]
         if cmd == 'def':
             block['name'] = header.pop(0)
@@ -56,23 +54,20 @@ class DynamoParser:
         args = type_adjusted_args(header)
         return {**block, **args}
 
-
     @staticmethod
     def calc(term):
         result = 0
         for summand in term.split('+'):
-            first_factor = True
+            product = 1
             for factor in summand.split('*'):
                 try:
                     num, den = factor.split('/')
                     part = float(num)/float(den)
                 except ValueError:
                     part = float(factor)
-                product = part if first_factor else part * product
-                first_factor = False
+                product = part * product
             result += product
         return result
-
 
     def close_block(self, block):
         if block is None:
@@ -82,24 +77,58 @@ class DynamoParser:
         else:
             self.def_blocks.append(block)
 
-
-    def def_content(self, line):
+    @staticmethod
+    def def_content(line):
         beat = DynamoParser.calc(line.pop(0))
-        level = float(line.pop(0)) if len(line) > 0 and not "=" in line[0] else None
+        level = float(line.pop(0)) if len(line) > 0 and "=" not in line[0] else None
         args = type_adjusted_args(line, dtype=float)
         if level is None:
             level = args.get('level', 1.)
         return {'beat': beat, 'level': level, **args}
 
-
     def parse_defs_to_curves(self):
-        def_codes = [self.parse_def_to_curve(block) for block in self.def_blocks if block['cmd'] == 'def']
+        for block in self.def_blocks:
+            self.enrich_block(block)
+        def_codes = [self.process_def_curve(block) for block in self.def_blocks if block['cmd'] == 'def']
         copy_codes = [self.process_def_copies(block) for block in self.def_blocks if block['cmd'] == 'copy']
         return '\n'.join([*def_codes, *copy_codes])
 
+    def enrich_block(self, block):
+        # extend template for more DEF HEADER arguments
+        template = {
+            'shape': 'expeak',
+            'start': 0,
+            'end': 0,
+            'repeat': 1,
+            'base_level': 0,
+            'scale': 1,
+            'attack': 0.01,
+            'decay': 0.25,
+            'track': '1',
+            'table': [],
+        }
+
+        if block['cmd'] == 'copy':
+            # obviously, the copied blocks must come after the definition of their source blocks
+            source = next(b for b in self.def_blocks if b['cmd'] == 'def' and b['name'] == block['src'])
+            template.update(source)
+            del template['cmd']
+            del template['name']
+
+        for [key, value] in template.items():
+            block.setdefault(key, value)
+
+        block['table'].extend(map(self.def_content, block['content']))
+        del block['content']
+
+        is_interval_block = block['shape'] == 'smoof'
+        if is_interval_block and len(block['table']) > 0:
+            block['base_level'] = block['table'][-1]['level']
 
     # GLSL-SPECIFIC
-    def def_term_single(self, block, line, nextline=None, var='b'):
+
+    @staticmethod
+    def def_term_single(block, line, var='b'):
         shape = line.get('shape', block['shape'])
         level = line.get('level', 1.)
         line.setdefault('attack', block.get('attack', 0.01))
@@ -135,7 +164,12 @@ class DynamoParser:
         return level_factor + result
 
     # GLSL-SPECIFIC
-    def def_term_interval(self, block, line, nextline, var='b'):
+
+    @staticmethod
+    def def_term_interval(block, line, nextline, var='b'):
+        line.setdefault('repeat', 0.)
+        nextline.setdefault('repeat', 0.)
+
         shape = line.get('shape', block['shape'])
         level = line.get('level', 1.)
         # insert here for more DEF LINE arguments for interval shapes
@@ -148,7 +182,6 @@ class DynamoParser:
         if shape == 'smoof':
             # smstep does also clamping, but is mix(a,b,x) working for b < a?
             transition = f"smstep({to_glsl(beat_start)}, {to_glsl(beat_end)}, {var})"
-
             power = int(line.get('power', 1))
             if power > 1:
                 transition = "*".join([transition] * power)
@@ -161,8 +194,8 @@ class DynamoParser:
 
         return f"({var} <= {to_glsl(beat_end)}) ? {result} : "
 
-
     # GLSL-SPECIFIC
+
     def parse_bpm_to_code(self):
         if self.bpm_block is None:
             quit("No BPM block defined. Can't work with shit.")
@@ -184,11 +217,12 @@ class DynamoParser:
 
         print("BPM", self.bpm_block)
 
-        # we have a problem if the bpm list doesnt start with 0 / the "first" value. just make it start with 0.
+        # we have a problem if the bpm list doesn't start with 0 / the "first" value. just make it start with 0.
         current_minute = 0.
         beat_table = [{'time': current_minute, 'beat': 0.}]
 
-        for start, end in this_and_next_element(self.bpm_block['content']):
+        zip_pairs = this_and_next_element(self.bpm_block['content'])
+        for start, end in zip_pairs:
             b_start = start['beat']
             b_end = end['beat']
             if 'slope' in start:
@@ -212,6 +246,9 @@ class DynamoParser:
             b_end = to_glsl(b_end)
             slope = to_glsl(slope)
 
+        else:
+            end = self.bpm_block['content'][0]
+
         beat_table[-1]['slope'] = 0.0
         beat_table[-1]['factor'] = end['bpm'] / 60.
 
@@ -224,7 +261,7 @@ class DynamoParser:
         return self.write_beat_table_glsl(beat_table)
 
     @staticmethod
-    def write_beat_table_rust(self, table):
+    def write_beat_table_rust(table):
         N = len(table)
 
         def get_floatarray(name, selector):
@@ -244,7 +281,7 @@ class DynamoParser:
         return dynamo
 
     @staticmethod
-    def write_beat_table_glsl(self, table):
+    def write_beat_table_glsl(table):
         N = len(table)
 
         def get_floatarray(name, selector):
@@ -267,28 +304,13 @@ class DynamoParser:
         return "\n".join([array_t, array_b, array_fac, array_slope, function])
 
     # GLSL-SPECIFIC
-    def parse_def_to_curve(self, block):
-        block.setdefault('shape', 'expeak')
-        block.setdefault('start', 0.)
-        block.setdefault('end', 0.)
-        block.setdefault('repeat', 0.)
-        block.setdefault('default', 0.)
-        block.setdefault('scale', 1.)
-        block.setdefault('attack', 0.01)
-        block.setdefault('decay', 0.25)
-        # insert here for more DEF HEADER arguments
-
-        table = list(map(self.def_content, block['content']))
-        is_interval_block = block['shape'] == 'smoof'
-        if is_interval_block and len(table) > 0:
-            block['default'] = table[-1]['level']
-
+    def process_def_curve(self, block):
         block_start = float(block['start']) - self.bpm_block['first']
         block_length = float(block['end']) - float(block['start'])
 
         function = f"float {block['name']}(float b)\n{{" + LF4
 
-        function += f"float r = {to_glsl(float(block['default']))};" + LF4
+        function += f"float r = {to_glsl(float(block['base_level']))};" + LF4
 
         if block_start > 0:
             function += f"b -= {to_glsl(block_start)};" + LF4
@@ -301,21 +323,24 @@ class DynamoParser:
         if block['repeat'] > 0:
             function += f"b = mod(b, {to_glsl(float(block['repeat']))});" + LF4
 
+        is_interval_block = block['shape'] == 'smoof'  # code duplication, but yeah.
         if is_interval_block:
             function += 'return '
-            for line, nextline in this_and_next_element(table):
+            for line, nextline in this_and_next_element(block['table']):
                 # interval terms are chains of "condition ? result : "
                 function += self.def_term_interval(block, line, nextline)
             function += 'r;'
 
         else:
-            for line in table:
+            for line in block['table']:
                 # single terms are contributing each on their own, i.e. all superimposed
                 term = self.def_term_single(block, line)
                 function += 'r += ' + term + ';' + LF4
             function += f"return r * theta(b);"
 
-        return function + '\n}'
+        function += '\n}'
+
+        return function
 
     # GLSL-SPECIFIC
     def process_def_copies(self, block):

@@ -1,15 +1,8 @@
 import argparse
-from enum import Enum
 
+from dynamo.defs import DynamoTarget
 from .DynamoParser import DynamoParser
 from .DynamoWriter import DynamoWriter
-
-LF4 = '\n' + 4 * ' '
-
-class DynamoTarget(Enum):
-    GLSL = 0,
-    Rust = 1,
-    Alki = 2,
 
 
 class Dynamo(DynamoParser):
@@ -27,9 +20,10 @@ class Dynamo(DynamoParser):
         parser.add_argument("--alki", action="store_true")
         self.args = parser.parse_args()
 
-        self.config_file = self.args.config
+        self.config_file = self.args.config.replace('\\', '/')
         if self.config_file.count('/') == 0:
             self.config_file = f"dynamo/config/{self.config_file}.dnm"
+        self.config_name = self.config_file.split('/')[-1].split('.')[0]
 
         target = DynamoTarget.Rust if self.args.rust \
             else DynamoTarget.Alki if self.args.alki \

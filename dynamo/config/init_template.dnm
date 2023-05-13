@@ -17,9 +17,11 @@ copy ONCE_PER_BEAT LATER_ALLIGATOR start=10
 # can have ONE BPM, beats=4 for 4 beats per bar, e.g. 4/4 (because the units are bars, not beats)
 # <onset beat> <bpm> <points for linear interpolation>
 #
-# def NAME type=none/step/peak/expeak default=0 level=1 start=0 end=0  # end=0 (or not given) is
+# def NAME type=none/step/peak/expeak level=1 base_level=0 start=0 end=0 track=1 # end=0 (or not given) is
 # <beat> attack=? decay=? repeat=0 level=1
+#
 
+# <-- track=1,2,3 ist liste
 
 # gitter vibriert
 # fog stärke
